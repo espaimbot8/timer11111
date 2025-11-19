@@ -114,27 +114,42 @@ export default function App() {
   const [editTimeVal, setEditTimeVal] = useState("25");
 
   // --- Goals State ---
-  const [goals, setGoals] = useState<WeeklyGoal[]>([
-    { id: '1', title: 'Finish Research Paper', progress: 60, tasks: [{ id: 't1', title: 'Find sources', status: 'DONE' as any }, { id: 't2', title: 'Write intro', status: 'DONE' as any }, { id: 't3', title: 'Draft body paragraphs', status: 'IN_PROGRESS' as any }] },
-    { id: '2', title: 'Linear Algebra Pset', progress: 0, tasks: [{ id: 't4', title: 'Q1-Q5', status: 'TODO' as any }] }
-  ]);
+  const [goals, setGoals] = useState<WeeklyGoal[]>(() => {
+    try {
+      const saved = localStorage.getItem('2027_goals');
+      return saved ? JSON.parse(saved) : [
+        { id: '1', title: 'Finish Research Paper', progress: 60, tasks: [{ id: 't1', title: 'Find sources', status: 'DONE' as any }, { id: 't2', title: 'Write intro', status: 'DONE' as any }, { id: 't3', title: 'Draft body paragraphs', status: 'IN_PROGRESS' as any }] },
+        { id: '2', title: 'Linear Algebra Pset', progress: 0, tasks: [{ id: 't4', title: 'Q1-Q5', status: 'TODO' as any }] }
+      ];
+    } catch (e) { return []; }
+  });
   const [newGoalInput, setNewGoalInput] = useState('');
   const [loadingGoalId, setLoadingGoalId] = useState<string | null>(null);
 
   // --- Vision Board State ---
-  const [visionItems, setVisionItems] = useState<VisionItem[]>([
-    { id: 'v1', type: 'image', content: 'https://images.unsplash.com/photo-1493934558415-9d19f0b2b4d2?auto=format&fit=crop&w=600&q=80', caption: 'Dream Setup' },
-    { id: 'v2', type: 'quote', content: 'The future depends on what you do today.' },
-    { id: 'v3', type: 'image', content: 'https://images.unsplash.com/photo-1555212697-194d092e3b8f?auto=format&fit=crop&w=600&q=80', caption: 'Graduation' },
-  ]);
+  const [visionItems, setVisionItems] = useState<VisionItem[]>(() => {
+    try {
+      const saved = localStorage.getItem('2027_visionItems');
+      return saved ? JSON.parse(saved) : [
+        { id: 'v1', type: 'image', content: 'https://images.unsplash.com/photo-1493934558415-9d19f0b2b4d2?auto=format&fit=crop&w=600&q=80', caption: 'Dream Setup' },
+        { id: 'v2', type: 'quote', content: 'The future depends on what you do today.' },
+        { id: 'v3', type: 'image', content: 'https://images.unsplash.com/photo-1555212697-194d092e3b8f?auto=format&fit=crop&w=600&q=80', caption: 'Graduation' },
+      ];
+    } catch (e) { return []; }
+  });
   const [newVisionContent, setNewVisionContent] = useState('');
   const [newVisionType, setNewVisionType] = useState<'image' | 'quote'>('image');
 
   // --- Exam State ---
-  const [exams, setExams] = useState<Exam[]>([
-    { id: 'e1', subject: 'Physics 101', date: new Date(Date.now() + 86400000 * 3).toISOString(), topics: ['Mechanics', 'Waves'] },
-    { id: 'e2', subject: 'Psychology Midterm', date: new Date(Date.now() + 86400000 * 10).toISOString(), topics: ['Cognition', 'Memory'] }
-  ]);
+  const [exams, setExams] = useState<Exam[]>(() => {
+    try {
+      const saved = localStorage.getItem('2027_exams');
+      return saved ? JSON.parse(saved) : [
+        { id: 'e1', subject: 'Physics 101', date: new Date(Date.now() + 86400000 * 3).toISOString(), topics: ['Mechanics', 'Waves'] },
+        { id: 'e2', subject: 'Psychology Midterm', date: new Date(Date.now() + 86400000 * 10).toISOString(), topics: ['Cognition', 'Memory'] }
+      ];
+    } catch (e) { return []; }
+  });
   const [newExamSub, setNewExamSub] = useState('');
   const [newExamDate, setNewExamDate] = useState('');
   const [loadingExamId, setLoadingExamId] = useState<string | null>(null);
@@ -146,7 +161,11 @@ export default function App() {
   // --- Countdown State ---
   const [now, setNow] = useState(new Date());
 
-  // --- Effects ---
+  // --- Effects for Persistence ---
+  useEffect(() => { localStorage.setItem('2027_goals', JSON.stringify(goals)); }, [goals]);
+  useEffect(() => { localStorage.setItem('2027_visionItems', JSON.stringify(visionItems)); }, [visionItems]);
+  useEffect(() => { localStorage.setItem('2027_exams', JSON.stringify(exams)); }, [exams]);
+
   useEffect(() => {
     let interval: NodeJS.Timeout;
     if (timerActive && timeLeft > 0) {
@@ -160,7 +179,7 @@ export default function App() {
   useEffect(() => {
       // Update clock for 2027 countdown
       const interval = setInterval(() => setNow(new Date()), 60000);
-      generateMotivation("studying and achieving dreams").then(setMotivation);
+      generateMotivation("studying").then(setMotivation);
       return () => clearInterval(interval);
   }, []);
 
@@ -177,10 +196,6 @@ export default function App() {
     setTimeLeft(nextDuration * 60);
     setEditTimeVal(nextDuration.toString());
     
-    // We pause the timer so the user can take a breath and acknowledge the mode switch,
-    // but we keep the FullScreen overlay open so they are locked in.
-    // If they are in "Break" mode, they see the break screen. 
-    // If they are back to "Focus", they see the focus screen.
     setTimerActive(false); 
   };
 
@@ -244,6 +259,22 @@ export default function App() {
     }));
   };
 
+  const deleteTask = (goalId: string, taskId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setGoals(goals.map(g => {
+      if (g.id !== goalId) return g;
+      const updatedTasks = g.tasks.filter(t => t.id !== taskId);
+      const completed = updatedTasks.filter(t => t.status === 'DONE').length;
+      const progress = updatedTasks.length ? Math.round((completed / updatedTasks.length) * 100) : 0;
+      return { ...g, tasks: updatedTasks, progress };
+    }));
+  };
+
+  const deleteGoal = (goalId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setGoals(goals.filter(g => g.id !== goalId));
+  };
+
   const addVisionItem = () => {
     if (!newVisionContent) return;
     setVisionItems([...visionItems, {
@@ -266,6 +297,11 @@ export default function App() {
     setNewExamSub('');
     setNewExamDate('');
   };
+  
+  const deleteExam = (examId: string, e: React.MouseEvent) => {
+      e.stopPropagation();
+      setExams(exams.filter(ex => ex.id !== examId));
+  }
 
   const getTipsForExam = async (examId: string, subject: string) => {
     setLoadingExamId(examId);
@@ -543,7 +579,11 @@ export default function App() {
                   <div key={goal.id} className="glass-panel rounded-2xl p-6 flex flex-col group hover:shadow-2xl hover:shadow-violet-900/10 transition-all duration-300">
                     <div className="flex justify-between items-start mb-4">
                       <h3 className="font-semibold text-lg pr-2 leading-tight text-white">{goal.title}</h3>
-                      <button onClick={() => setGoals(goals.filter(g => g.id !== goal.id))} className="text-slate-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button 
+                        onClick={(e) => deleteGoal(goal.id, e)} 
+                        className="text-slate-600 hover:text-red-400 p-1 rounded hover:bg-white/5 transition-all"
+                        title="Delete Goal"
+                      >
                           <IconTrash className="w-4 h-4" />
                       </button>
                     </div>
@@ -563,21 +603,31 @@ export default function App() {
                       {loadingGoalId === goal.id && (
                           <div className="flex items-center justify-center py-8 text-violet-300 text-sm animate-pulse">
                               <IconSparkles className="w-4 h-4 mr-2" />
-                              AI is planning...
+                              Generating plan...
                           </div>
                       )}
                       {goal.tasks.map(task => (
                         <div 
                           key={task.id} 
                           onClick={() => toggleTask(goal.id, task.id)}
-                          className="flex items-center cursor-pointer hover:bg-white/5 p-2 rounded-lg -mx-2 transition-colors group/task"
+                          className="flex items-center cursor-pointer hover:bg-white/5 p-2 rounded-lg -mx-2 transition-colors group/task justify-between"
                         >
-                          <div className={`w-5 h-5 rounded border flex items-center justify-center mr-3 transition-all ${task.status === 'DONE' ? 'bg-emerald-500 border-emerald-500 scale-110' : 'border-slate-600 bg-transparent group-hover/task:border-slate-400'}`}>
-                            {task.status === 'DONE' && <IconCheck className="w-3.5 h-3.5 text-black" />}
+                          <div className="flex items-center flex-1 min-w-0">
+                            <div className={`w-5 h-5 rounded border flex items-center justify-center mr-3 transition-all flex-shrink-0 ${task.status === 'DONE' ? 'bg-emerald-500 border-emerald-500 scale-110' : 'border-slate-600 bg-transparent group-hover/task:border-slate-400'}`}>
+                              {task.status === 'DONE' && <IconCheck className="w-3.5 h-3.5 text-black" />}
+                            </div>
+                            <span className={`text-sm transition-colors truncate ${task.status === 'DONE' ? 'text-slate-500 line-through decoration-slate-600' : 'text-slate-200'}`}>
+                              {task.title}
+                            </span>
                           </div>
-                          <span className={`text-sm transition-colors ${task.status === 'DONE' ? 'text-slate-500 line-through decoration-slate-600' : 'text-slate-200'}`}>
-                            {task.title}
-                          </span>
+                          
+                          <button 
+                            onClick={(e) => deleteTask(goal.id, task.id, e)}
+                            className="p-1.5 text-slate-600 hover:text-red-400 opacity-0 group-hover/task:opacity-100 transition-opacity rounded hover:bg-white/10 ml-2"
+                            title="Delete Task"
+                          >
+                            <IconTrash className="w-3 h-3" />
+                          </button>
                         </div>
                       ))}
                     </div>
@@ -636,8 +686,9 @@ export default function App() {
                       </div>
                     )}
                     <button 
-                      onClick={() => setVisionItems(visionItems.filter(i => i.id !== item.id))}
-                      className="absolute top-3 right-3 p-2 bg-black/40 backdrop-blur-md rounded-full opacity-0 group-hover:opacity-100 text-white hover:bg-red-500/80 transition-all duration-300"
+                      onClick={(e) => { e.stopPropagation(); setVisionItems(visionItems.filter(i => i.id !== item.id)); }}
+                      className="absolute top-3 right-3 p-2 bg-black/60 backdrop-blur-md rounded-full text-slate-300 hover:text-white hover:bg-red-500/80 transition-all duration-300 z-20"
+                      title="Delete Item"
                     >
                       <IconTrash className="w-3 h-3" />
                     </button>
@@ -699,6 +750,14 @@ export default function App() {
                         <div className={`text-4xl font-bold tracking-tighter ${isUrgent ? 'text-red-400' : 'text-violet-300'}`}>{daysLeft}</div>
                         <div className="text-[10px] text-slate-500 uppercase tracking-widest font-medium mt-1">Days Left</div>
                       </div>
+
+                      <button 
+                        onClick={(e) => deleteExam(exam.id, e)}
+                        className="absolute top-4 right-4 text-slate-600 hover:text-red-400 p-2 rounded-full hover:bg-white/5 opacity-0 group-hover:opacity-100 transition-all"
+                        title="Delete Exam"
+                      >
+                          <IconTrash className="w-4 h-4" />
+                      </button>
 
                       <div className="w-full md:w-72 bg-black/20 rounded-xl p-4 border border-white/5 hover:border-white/10 transition-colors">
                         {!examTips[exam.id] ? (
