@@ -1,79 +1,38 @@
 import React, { useState, useEffect, Fragment } from 'react';
 import { createRoot } from 'react-dom/client';
-import { GoogleGenAI, Type } from "@google/genai";
 
 // ==========================================
 // 1. ICONS
 // ==========================================
-interface IconProps {
-  className?: string;
-  onClick?: () => void;
-}
-
-const IconTimer = ({ className, onClick }: IconProps) => (<svg onClick={onClick} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>);
-const IconTarget = ({ className, onClick }: IconProps) => (<svg onClick={onClick} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>);
-const IconImage = ({ className, onClick }: IconProps) => (<svg onClick={onClick} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>);
-const IconCalendar = ({ className, onClick }: IconProps) => (<svg onClick={onClick} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/></svg>);
-const IconCheck = ({ className, onClick }: IconProps) => (<svg onClick={onClick} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="20 6 9 17 4 12"/></svg>);
-const IconPlus = ({ className, onClick }: IconProps) => (<svg onClick={onClick} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M5 12h14"/><path d="M12 5v14"/></svg>);
-const IconTrash = ({ className, onClick }: IconProps) => (<svg onClick={onClick} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>);
-const IconSparkles = ({ className, onClick }: IconProps) => (<svg onClick={onClick} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M9 3v4"/><path d="M3 7h4"/><path d="M3 3h1"/></svg>);
-const IconBrain = ({ className, onClick }: IconProps) => (<svg onClick={onClick} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 1.98-3A2.5 2.5 0 0 1 9.5 2Z" /><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-1.98-3A2.5 2.5 0 0 0 14.5 2Z" /></svg>);
-const IconPlay = ({ className, onClick }: IconProps) => (<svg onClick={onClick} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polygon points="5 3 19 12 5 21 5 3"/></svg>);
-const IconPause = ({ className, onClick }: IconProps) => (<svg onClick={onClick} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect width="4" height="16" x="6" y="4"/><rect width="4" height="16" x="14" y="4"/></svg>);
-const IconChevronRight = ({ className, onClick }: IconProps) => (<svg onClick={onClick} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m9 18 6-6-6-6"/></svg>);
+const IconTimer = ({ className, onClick }: { className?: string, onClick?: any }) => (<svg onClick={onClick} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>);
+const IconTarget = ({ className, onClick }: { className?: string, onClick?: any }) => (<svg onClick={onClick} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>);
+const IconImage = ({ className, onClick }: { className?: string, onClick?: any }) => (<svg onClick={onClick} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>);
+const IconCalendar = ({ className, onClick }: { className?: string, onClick?: any }) => (<svg onClick={onClick} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/></svg>);
+const IconCheck = ({ className, onClick }: { className?: string, onClick?: any }) => (<svg onClick={onClick} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="20 6 9 17 4 12"/></svg>);
+const IconPlus = ({ className, onClick }: { className?: string, onClick?: any }) => (<svg onClick={onClick} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M5 12h14"/><path d="M12 5v14"/></svg>);
+const IconTrash = ({ className, onClick }: { className?: string, onClick?: any }) => (<svg onClick={onClick} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>);
+const IconSparkles = ({ className, onClick }: { className?: string, onClick?: any }) => (<svg onClick={onClick} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M9 3v4"/><path d="M3 7h4"/><path d="M3 3h1"/></svg>);
+const IconBrain = ({ className, onClick }: { className?: string, onClick?: any }) => (<svg onClick={onClick} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 1.98-3A2.5 2.5 0 0 1 9.5 2Z" /><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-1.98-3A2.5 2.5 0 0 0 14.5 2Z" /></svg>);
+const IconPlay = ({ className, onClick }: { className?: string, onClick?: any }) => (<svg onClick={onClick} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polygon points="5 3 19 12 5 21 5 3"/></svg>);
+const IconPause = ({ className, onClick }: { className?: string, onClick?: any }) => (<svg onClick={onClick} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect width="4" height="16" x="6" y="4"/><rect width="4" height="16" x="14" y="4"/></svg>);
+const IconChevronRight = ({ className, onClick }: { className?: string, onClick?: any }) => (<svg onClick={onClick} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m9 18 6-6-6-6"/></svg>);
 
 // ==========================================
-// 2. SERVICES (Gemini Logic)
+// 2. LOCAL SERVICES
 // ==========================================
 const generateSubtasks = async (goal) => {
-  try {
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: `Break down this goal into 3-6 short actionable subtasks: "${goal}".`,
-      config: {
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: Type.ARRAY,
-          items: { type: Type.STRING }
-        }
-      }
-    });
-    const tasks = JSON.parse(response.text || "[]");
-    if (tasks && Array.isArray(tasks) && tasks.length > 0) return tasks;
-    return ["Research topic", "Draft outline", "Gather resources", "Review notes", "Practice problems", "Summarize key points"].sort(() => 0.5 - Math.random()).slice(0, 3);
-  } catch (e) {
-    console.error(e);
-    return ["Research topic", "Draft outline", "Gather resources", "Review notes", "Practice problems", "Summarize key points"].sort(() => 0.5 - Math.random()).slice(0, 3);
-  }
+  await new Promise(r => setTimeout(r, 500));
+  return ["Research topic", "Draft outline", "Gather resources", "Review notes", "Practice problems", "Summarize key points"].sort(() => 0.5 - Math.random()).slice(0, 3);
 };
 
 const generateMotivation = async () => {
-  try {
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: "Write a very short motivational quote (max 6 words) for a student or professional working hard. No quotes in output.",
-    });
-    return response.text?.trim() || "Stay hungry.";
-  } catch (e) {
-    const q = ["focus on the process.", "dream big.", "make it happen.", "2027 is waiting.", "stay hungry.", "consistency is key."];
-    return q[Math.floor(Math.random() * q.length)];
-  }
+  const q = ["focus on the process.", "dream big.", "make it happen.", "2027 is waiting.", "stay hungry.", "consistency is key."];
+  return q[Math.floor(Math.random() * q.length)];
 };
 
 const getExamStudyTips = async (sub) => {
-  try {
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: `Give 3 short bullet point study tips for ${sub}.`,
-    });
-    return response.text || `• Review ${sub} syllabus\n• Practice past papers\n• Create summary notes`;
-  } catch (e) {
-    return `• Review ${sub} syllabus\n• Practice past papers\n• Create summary notes`;
-  }
+  await new Promise(r => setTimeout(r, 500));
+  return `• Review ${sub} syllabus\n• Practice past papers\n• Create summary notes`;
 };
 
 // ==========================================
@@ -225,7 +184,7 @@ function App() {
   const daysToYearEnd = Math.max(0, Math.floor((new Date(now.getFullYear() + 1, 0, 1).getTime() - now.getTime()) / 86400000));
 
   return (
-    <React.Fragment>
+    <div className="h-full w-full">
       {isFullScreen && <FullScreenFocus mode={timerMode} timeLeft={timeLeft} totalTime={timerDuration} isActive={timerActive} toggleTimer={() => setTimerActive(!timerActive)} onExit={() => setIsFullScreen(false)} onSkip={handleTimerComplete} taskLabel={goals[0]?.title || "Deep Work"} />}
       <div className="flex h-screen w-full text-white font-sans">
         <aside className="w-20 lg:w-64 glass-panel-strong flex flex-col p-4 lg:p-6 z-40 border-r border-white/5">
@@ -291,7 +250,7 @@ function App() {
                          <div className="w-full bg-black/20 h-1.5 rounded-full mb-6"><div className="h-full bg-gradient-to-r from-violet-500 to-fuchsia-500 transition-all" style={{width: `${g.progress}%`}}></div></div>
                          <div className="space-y-3">
                             {loadingGoalId === g.id && <div className="text-center text-xs text-violet-300 animate-pulse">Generating plan...</div>}
-                            {g.tasks.map(t => (
+                            {g.tasks.map((t) => (
                                <div key={t.id} className="flex justify-between group/task cursor-pointer" onClick={()=>toggleTask(g.id, t.id)}>
                                   <div className="flex items-center"><div className={`w-4 h-4 rounded border mr-3 flex items-center justify-center ${t.status === 'DONE' ? 'bg-emerald-500 border-emerald-500' : 'border-slate-600'}`}>{t.status === 'DONE' && <IconCheck className="w-3 h-3 text-black"/>}</div><span className={`text-sm ${t.status === 'DONE' ? 'text-slate-500 line-through' : 'text-slate-200'}`}>{t.title}</span></div>
                                   <button onClick={(e)=>{e.stopPropagation(); deleteTask(g.id, t.id)}} className="opacity-0 group-hover/task:opacity-100 text-slate-600 hover:text-red-400"><IconTrash className="w-3 h-3"/></button>
@@ -340,9 +299,12 @@ function App() {
           )}
         </main>
       </div>
-    </React.Fragment>
+    </div>
   );
 }
 
-const root = createRoot(document.getElementById('root'));
+// ==========================================
+// 5. MOUNT
+// ==========================================
+const root = createRoot(document.getElementById('root')!);
 root.render(<App />);
