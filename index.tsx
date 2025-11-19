@@ -1,101 +1,106 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Fragment } from 'react';
 import { createRoot } from 'react-dom/client';
+import { GoogleGenAI, Type } from "@google/genai";
 
 // ==========================================
-// 1. TYPES & CONSTANTS
+// 1. ICONS
 // ==========================================
-enum TaskStatus { TODO = 'TODO', IN_PROGRESS = 'IN_PROGRESS', DONE = 'DONE' }
-enum TimerMode { FOCUS = 'Focus', SHORT_BREAK = 'Short Break', LONG_BREAK = 'Long Break' }
+interface IconProps {
+  className?: string;
+  onClick?: () => void;
+}
 
-interface Task { id: string; title: string; status: TaskStatus; }
-interface WeeklyGoal { id: string; title: string; progress: number; tasks: Task[]; }
-interface Exam { id: string; subject: string; date: string; topics?: string[]; }
-interface VisionItem { id: string; type: 'image' | 'quote'; content: string; caption?: string; }
-
-// ==========================================
-// 2. ICONS
-// ==========================================
-const IconTimer = ({ className, onClick }: any) => (<svg onClick={onClick} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>);
-const IconTarget = ({ className, onClick }: any) => (<svg onClick={onClick} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>);
-const IconImage = ({ className, onClick }: any) => (<svg onClick={onClick} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>);
-const IconCalendar = ({ className, onClick }: any) => (<svg onClick={onClick} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/></svg>);
-const IconCheck = ({ className, onClick }: any) => (<svg onClick={onClick} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="20 6 9 17 4 12"/></svg>);
-const IconPlus = ({ className, onClick }: any) => (<svg onClick={onClick} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M5 12h14"/><path d="M12 5v14"/></svg>);
-const IconTrash = ({ className, onClick }: any) => (<svg onClick={onClick} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>);
-const IconSparkles = ({ className, onClick }: any) => (<svg onClick={onClick} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M9 3v4"/><path d="M3 7h4"/><path d="M3 3h1"/></svg>);
-const IconBrain = ({ className, onClick }: any) => (<svg onClick={onClick} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 1.98-3A2.5 2.5 0 0 1 9.5 2Z" /><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-1.98-3A2.5 2.5 0 0 0 14.5 2Z" /></svg>);
-const IconPlay = ({ className, onClick }: any) => (<svg onClick={onClick} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polygon points="5 3 19 12 5 21 5 3"/></svg>);
-const IconPause = ({ className, onClick }: any) => (<svg onClick={onClick} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect width="4" height="16" x="6" y="4"/><rect width="4" height="16" x="14" y="4"/></svg>);
-const IconChevronRight = ({ className, onClick }: any) => (<svg onClick={onClick} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m9 18 6-6-6-6"/></svg>);
+const IconTimer = ({ className, onClick }: IconProps) => (<svg onClick={onClick} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>);
+const IconTarget = ({ className, onClick }: IconProps) => (<svg onClick={onClick} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>);
+const IconImage = ({ className, onClick }: IconProps) => (<svg onClick={onClick} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>);
+const IconCalendar = ({ className, onClick }: IconProps) => (<svg onClick={onClick} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/></svg>);
+const IconCheck = ({ className, onClick }: IconProps) => (<svg onClick={onClick} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="20 6 9 17 4 12"/></svg>);
+const IconPlus = ({ className, onClick }: IconProps) => (<svg onClick={onClick} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M5 12h14"/><path d="M12 5v14"/></svg>);
+const IconTrash = ({ className, onClick }: IconProps) => (<svg onClick={onClick} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>);
+const IconSparkles = ({ className, onClick }: IconProps) => (<svg onClick={onClick} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M9 3v4"/><path d="M3 7h4"/><path d="M3 3h1"/></svg>);
+const IconBrain = ({ className, onClick }: IconProps) => (<svg onClick={onClick} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 1.98-3A2.5 2.5 0 0 1 9.5 2Z" /><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-1.98-3A2.5 2.5 0 0 0 14.5 2Z" /></svg>);
+const IconPlay = ({ className, onClick }: IconProps) => (<svg onClick={onClick} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polygon points="5 3 19 12 5 21 5 3"/></svg>);
+const IconPause = ({ className, onClick }: IconProps) => (<svg onClick={onClick} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect width="4" height="16" x="6" y="4"/><rect width="4" height="16" x="14" y="4"/></svg>);
+const IconChevronRight = ({ className, onClick }: IconProps) => (<svg onClick={onClick} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m9 18 6-6-6-6"/></svg>);
 
 // ==========================================
-// 3. SERVICES (Local Logic - No Cloud)
+// 2. SERVICES (Gemini Logic)
 // ==========================================
-const generateSubtasks = async (goal: string) => {
-  await new Promise(r => setTimeout(r, 500));
-  const tasks = ["Research topic", "Draft outline", "Gather resources", "Review notes", "Practice problems", "Summarize key points"];
-  return tasks.sort(() => 0.5 - Math.random()).slice(0, 3);
+const generateSubtasks = async (goal) => {
+  try {
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: `Break down this goal into 3-6 short actionable subtasks: "${goal}".`,
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.ARRAY,
+          items: { type: Type.STRING }
+        }
+      }
+    });
+    const tasks = JSON.parse(response.text || "[]");
+    if (tasks && Array.isArray(tasks) && tasks.length > 0) return tasks;
+    return ["Research topic", "Draft outline", "Gather resources", "Review notes", "Practice problems", "Summarize key points"].sort(() => 0.5 - Math.random()).slice(0, 3);
+  } catch (e) {
+    console.error(e);
+    return ["Research topic", "Draft outline", "Gather resources", "Review notes", "Practice problems", "Summarize key points"].sort(() => 0.5 - Math.random()).slice(0, 3);
+  }
 };
+
 const generateMotivation = async () => {
-  const q = ["focus on the process.", "dream big.", "make it happen.", "2027 is waiting.", "stay hungry.", "consistency is key."];
-  return q[Math.floor(Math.random() * q.length)];
+  try {
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: "Write a very short motivational quote (max 6 words) for a student or professional working hard. No quotes in output.",
+    });
+    return response.text?.trim() || "Stay hungry.";
+  } catch (e) {
+    const q = ["focus on the process.", "dream big.", "make it happen.", "2027 is waiting.", "stay hungry.", "consistency is key."];
+    return q[Math.floor(Math.random() * q.length)];
+  }
 };
-const getExamStudyTips = async (sub: string) => {
-  await new Promise(r => setTimeout(r, 500));
-  return `• Review ${sub} syllabus\n• Practice past papers\n• Create summary notes`;
+
+const getExamStudyTips = async (sub) => {
+  try {
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: `Give 3 short bullet point study tips for ${sub}.`,
+    });
+    return response.text || `• Review ${sub} syllabus\n• Practice past papers\n• Create summary notes`;
+  } catch (e) {
+    return `• Review ${sub} syllabus\n• Practice past papers\n• Create summary notes`;
+  }
 };
 
 // ==========================================
-// 4. COMPONENTS
+// 3. COMPONENTS
 // ==========================================
-const ProgressBar = ({ progress, mode }: { progress: number, mode: TimerMode }) => (
+const ProgressBar = ({ progress, mode }) => (
   <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden mt-8 max-w-md relative">
-    <div className={`h-full transition-all duration-1000 ease-linear ${mode === TimerMode.FOCUS ? 'bg-gradient-to-r from-violet-500 via-fuchsia-500 to-violet-500 bg-[length:200%_100%] animate-[shimmer_2s_infinite]' : 'bg-gradient-to-r from-emerald-400 to-cyan-400'}`} style={{ width: `${progress}%` }} />
+    <div className={`h-full transition-all duration-1000 ease-linear ${mode === 'Focus' ? 'bg-gradient-to-r from-violet-500 via-fuchsia-500 to-violet-500 bg-[length:200%_100%] animate-[shimmer_2s_infinite]' : 'bg-gradient-to-r from-emerald-400 to-cyan-400'}`} style={{ width: `${progress}%` }} />
   </div>
 );
 
-const FullScreenFocus = ({ mode, timeLeft, totalTime, isActive, toggleTimer, onExit, taskLabel, onSkip }: any) => {
-  const formatTime = (s: number) => `${Math.floor(s / 60).toString().padStart(2, '0')}:${(s % 60).toString().padStart(2, '0')}`;
+const FullScreenFocus = ({ mode, timeLeft, totalTime, isActive, toggleTimer, onExit, taskLabel, onSkip }) => {
+  const formatTime = (s) => `${Math.floor(s / 60).toString().padStart(2, '0')}:${(s % 60).toString().padStart(2, '0')}`;
   const progress = Math.min(100, Math.max(0, ((totalTime - timeLeft) / totalTime) * 100));
-  const isBreak = mode !== TimerMode.FOCUS;
+  const isBreak = mode !== 'Focus';
   
   return (
-    <div className={`fixed inset-0 z-[100] ${isBreak ? 'bg-[#022c22]' : 'bg-[#020617]'} flex flex-col items-center justify-center animate-fade-in transition-colors duration-1000`}>
-      <button onClick={onExit} className="absolute top-8 right-8 text-slate-400 hover:text-white group">
-        <div className="p-3 rounded-full border border-white/10 group-hover:bg-white/10 transition-colors">✕</div>
-      </button>
-      
+    <div className={`fixed inset-0 z-50 ${isBreak ? 'bg-emerald-950/95' : 'bg-dark/95'} backdrop-blur-3xl flex flex-col items-center justify-center animate-fade-in transition-colors duration-1000`}>
+      <button onClick={onExit} className="absolute top-8 right-8 text-slate-400 hover:text-white"><div className="p-2 rounded-full border border-white/10">✕</div></button>
       <div className="text-center w-full max-w-2xl px-4">
-        <div className="mb-12 animate-pulse-slow">
-          <span className={`inline-block px-6 py-2 rounded-full text-sm font-bold tracking-[0.25em] uppercase border ${isBreak ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-300' : 'bg-violet-500/10 border-violet-500/20 text-violet-300'}`}>
-            {mode === TimerMode.FOCUS ? 'Deep Focus' : 'Recharge Time'}
-          </span>
-        </div>
-        
-        <h1 className="text-[8rem] md:text-[14rem] leading-none font-mono font-bold tracking-tighter text-white tabular-nums drop-shadow-2xl select-none">
-          {formatTime(timeLeft)}
-        </h1>
-        
-        <p className="text-2xl text-slate-400 mt-10 font-light tracking-wide">
-          {isBreak ? "Take a breath." : <span>Working on: <span className="text-violet-300 font-medium">{taskLabel}</span></span>}
-        </p>
-        
-        <div className="flex flex-col items-center mt-16 gap-8">
-          <div className="flex items-center gap-6">
-            <button 
-              onClick={toggleTimer} 
-              className={`w-24 h-24 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-105 ${isActive ? 'bg-white/5 text-white border border-white/10' : 'bg-white text-black shadow-[0_0_40px_rgba(255,255,255,0.3)]'}`}
-            >
-              {isActive ? <IconPause className="w-10 h-10" /> : <IconPlay className="w-10 h-10 ml-1" />}
-            </button>
-            
-            <button 
-              onClick={onSkip} 
-              className="w-14 h-14 rounded-full bg-white/5 text-slate-400 hover:text-white flex items-center justify-center border border-white/5 hover:bg-white/10 transition-colors"
-              title="Skip Phase"
-            >
-              <IconChevronRight className="w-6 h-6" />
-            </button>
+        <div className="mb-8 animate-pulse-slow"><span className={`inline-block px-4 py-1.5 rounded-full text-sm font-bold tracking-[0.2em] uppercase border ${isBreak ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-300' : 'bg-violet-500/10 border-violet-500/20 text-violet-300'}`}>{mode === 'Focus' ? 'Deep Focus' : 'Recharge Time'}</span></div>
+        <h1 className="text-[8rem] md:text-[12rem] leading-none font-mono font-bold tracking-tighter text-white tabular-nums">{formatTime(timeLeft)}</h1>
+        <p className="text-xl text-slate-400 mt-8 font-light">{isBreak ? "Take a breath." : <span>Working on: <span className={isBreak ? 'text-emerald-300' : 'text-violet-300'}>{taskLabel}</span></span>}</p>
+        <div className="flex flex-col items-center mt-12 gap-6">
+          <div className="flex items-center gap-4">
+            <button onClick={toggleTimer} className={`w-20 h-20 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-105 ${isActive ? 'bg-white/5 text-white border border-white/10' : 'bg-white text-black'}`}>{isActive ? <IconPause className="w-8 h-8" /> : <IconPlay className="w-8 h-8 ml-1" />}</button>
+            <button onClick={onSkip} className="w-12 h-12 rounded-full bg-white/5 text-slate-400 hover:text-white flex items-center justify-center border border-white/5"><IconChevronRight className="w-5 h-5" /></button>
           </div>
           <ProgressBar progress={progress} mode={mode} />
         </div>
@@ -105,17 +110,16 @@ const FullScreenFocus = ({ mode, timeLeft, totalTime, isActive, toggleTimer, onE
 };
 
 // ==========================================
-// 5. MAIN APP
+// 4. MAIN APP
 // ==========================================
 function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
   
-  // --- Timer Persistence ---
+  // Persistence Logic
   const [savedDuration, setSavedDuration] = useState(() => {
     try { return parseInt(localStorage.getItem('2027_timerDuration') || '1500'); } catch { return 1500; }
   });
-
-  const [timerMode, setTimerMode] = useState(TimerMode.FOCUS);
+  const [timerMode, setTimerMode] = useState('Focus');
   const [timeLeft, setTimeLeft] = useState(savedDuration);
   const [timerActive, setTimerActive] = useState(false);
   const [timerDuration, setTimerDuration] = useState(savedDuration);
@@ -123,38 +127,34 @@ function App() {
   const [isEditingTime, setIsEditingTime] = useState(false);
   const [editTimeVal, setEditTimeVal] = useState((savedDuration/60).toString());
 
-  // --- Data Persistence ---
-  const [goals, setGoals] = useState<WeeklyGoal[]>(() => {
+  const [goals, setGoals] = useState(() => {
     try { return JSON.parse(localStorage.getItem('2027_goals') || '[]'); } catch { return []; }
   });
-  const [visionItems, setVisionItems] = useState<VisionItem[]>(() => {
+  const [visionItems, setVisionItems] = useState(() => {
     try { return JSON.parse(localStorage.getItem('2027_visionItems') || '[]'); } catch { return []; }
   });
-  const [exams, setExams] = useState<Exam[]>(() => {
+  const [exams, setExams] = useState(() => {
     try { return JSON.parse(localStorage.getItem('2027_exams') || '[]'); } catch { return []; }
   });
 
   const [newGoalInput, setNewGoalInput] = useState('');
-  const [loadingGoalId, setLoadingGoalId] = useState<string|null>(null);
+  const [loadingGoalId, setLoadingGoalId] = useState(null);
   const [newVisionContent, setNewVisionContent] = useState('');
-  const [newVisionType, setNewVisionType] = useState<'image'|'quote'>('image');
+  const [newVisionType, setNewVisionType] = useState('image');
   const [newExamSub, setNewExamSub] = useState('');
   const [newExamDate, setNewExamDate] = useState('');
-  const [loadingExamId, setLoadingExamId] = useState<string|null>(null);
-  const [examTips, setExamTips] = useState<Record<string,string>>({});
+  const [loadingExamId, setLoadingExamId] = useState(null);
+  const [examTips, setExamTips] = useState({});
   const [motivation, setMotivation] = useState("Loading vibes...");
   const [now, setNow] = useState(new Date());
 
-  // Effects
   useEffect(() => { localStorage.setItem('2027_goals', JSON.stringify(goals)); }, [goals]);
   useEffect(() => { localStorage.setItem('2027_visionItems', JSON.stringify(visionItems)); }, [visionItems]);
   useEffect(() => { localStorage.setItem('2027_exams', JSON.stringify(exams)); }, [exams]);
-  
-  // Persist timer duration ONLY when user actively sets it (see saveTimeEdit)
   useEffect(() => { localStorage.setItem('2027_timerDuration', savedDuration.toString()); }, [savedDuration]);
 
   useEffect(() => {
-    let interval: any;
+    let interval;
     if (timerActive && timeLeft > 0) interval = setInterval(() => setTimeLeft(p => p - 1), 1000);
     else if (timeLeft === 0 && timerActive) handleTimerComplete();
     return () => clearInterval(interval);
@@ -167,8 +167,8 @@ function App() {
   }, []);
 
   const handleTimerComplete = () => {
-    const isFocus = timerMode === TimerMode.FOCUS;
-    const nextMode = isFocus ? TimerMode.SHORT_BREAK : TimerMode.FOCUS;
+    const isFocus = timerMode === 'Focus';
+    const nextMode = isFocus ? 'Short Break' : 'Focus';
     const nextDuration = isFocus ? 5 * 60 : savedDuration; 
     setTimerMode(nextMode);
     setTimerDuration(nextDuration);
@@ -180,7 +180,7 @@ function App() {
     setIsEditingTime(false);
     const m = parseInt(editTimeVal) || 25;
     const s = m * 60;
-    setSavedDuration(s); // Update the saved preference
+    setSavedDuration(s); 
     setTimerDuration(s);
     setTimeLeft(s);
   };
@@ -192,33 +192,33 @@ function App() {
     setNewGoalInput('');
     setLoadingGoalId(newGoal.id);
     const subtasks = await generateSubtasks(newGoal.title);
-    const tasks = subtasks.map((t, i) => ({ id: `${newGoal.id}-${i}`, title: t, status: TaskStatus.TODO }));
+    const tasks = subtasks.map((t, i) => ({ id: `${newGoal.id}-${i}`, title: t, status: 'TODO' }));
     setGoals(prev => prev.map(g => g.id === newGoal.id ? { ...g, tasks } : g));
     setLoadingGoalId(null);
   };
 
-  const toggleTask = (gId: string, tId: string) => {
+  const toggleTask = (gId, tId) => {
     setGoals(goals.map(g => {
       if (g.id !== gId) return g;
-      const updatedTasks = g.tasks.map((t: any) => t.id === tId ? { ...t, status: t.status === TaskStatus.DONE ? TaskStatus.TODO : TaskStatus.DONE } : t);
-      const completed = updatedTasks.filter((t: any) => t.status === TaskStatus.DONE).length;
+      const updatedTasks = g.tasks.map(t => t.id === tId ? { ...t, status: t.status === 'DONE' ? 'TODO' : 'DONE' } : t);
+      const completed = updatedTasks.filter(t => t.status === 'DONE').length;
       return { ...g, tasks: updatedTasks, progress: updatedTasks.length ? Math.round((completed / updatedTasks.length) * 100) : 0 };
     }));
   };
 
-  const deleteGoal = (id: string) => setGoals(goals.filter(g => g.id !== id));
-  const deleteTask = (gId: string, tId: string) => {
+  const deleteGoal = (id) => setGoals(goals.filter(g => g.id !== id));
+  const deleteTask = (gId, tId) => {
       setGoals(goals.map(g => {
         if (g.id !== gId) return g;
-        const updatedTasks = g.tasks.filter((t: any) => t.id !== tId);
-        const completed = updatedTasks.filter((t: any) => t.status === TaskStatus.DONE).length;
+        const updatedTasks = g.tasks.filter(t => t.id !== tId);
+        const completed = updatedTasks.filter(t => t.status === 'DONE').length;
         return { ...g, tasks: updatedTasks, progress: updatedTasks.length ? Math.round((completed / updatedTasks.length) * 100) : 0 };
       }));
   };
   const addVision = () => { if(newVisionContent) { setVisionItems([...visionItems, { id: Date.now().toString(), type: newVisionType, content: newVisionContent }]); setNewVisionContent(''); }};
   const addExam = () => { if(newExamSub && newExamDate) { setExams([...exams, { id: Date.now().toString(), subject: newExamSub, date: new Date(newExamDate).toISOString(), topics: [] }]); setNewExamSub(''); setNewExamDate(''); }};
-  const deleteExam = (id: string) => setExams(exams.filter(e => e.id !== id));
-  const getTips = async (id: string, sub: string) => { setLoadingExamId(id); const tips = await getExamStudyTips(sub); setExamTips(p => ({...p, [id]: tips})); setLoadingExamId(null); };
+  const deleteExam = (id) => setExams(exams.filter(e => e.id !== id));
+  const getTips = async (id, sub) => { setLoadingExamId(id); const tips = await getExamStudyTips(sub); setExamTips(p => ({...p, [id]: tips})); setLoadingExamId(null); };
 
   const msTo2027 = new Date('2027-01-01').getTime() - now.getTime();
   const daysTo2027 = Math.max(0, Math.floor(msTo2027 / (86400000)));
@@ -261,14 +261,14 @@ function App() {
                        <div className="flex items-baseline gap-3"><span className="text-5xl md:text-6xl font-bold">{daysToYearEnd}</span><span className="text-lg text-slate-400">days left</span></div>
                     </div>
                     <div className="glass-panel px-8 py-6 rounded-[2rem] flex items-center justify-between border-t border-white/10">
-                       <div><div className="text-xs text-slate-400 uppercase tracking-wider mb-1">Status</div><div className="text-white font-medium">{timerActive ? (timerMode === TimerMode.FOCUS ? "🔥 Deep Focus" : "🍃 Recharging") : "Ready"}</div></div>
+                       <div><div className="text-xs text-slate-400 uppercase tracking-wider mb-1">Status</div><div className="text-white font-medium">{timerActive ? (timerMode === 'Focus' ? "🔥 Deep Focus" : "🍃 Recharging") : "Ready"}</div></div>
                        <button onClick={() => setIsFullScreen(true)} className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center"><IconPlay className="w-4 h-4" /></button>
                     </div>
                  </div>
               </div>
               <div className="glass-panel rounded-[2rem] p-8 mb-10 relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-8">
                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-4"><span className={`h-2 w-2 rounded-full ${timerMode === TimerMode.FOCUS ? 'bg-violet-500' : 'bg-emerald-400'}`}></span><span className="text-sm uppercase tracking-widest text-slate-400">{timerMode} Mode</span></div>
+                    <div className="flex items-center gap-2 mb-4"><span className={`h-2 w-2 rounded-full ${timerMode === 'Focus' ? 'bg-violet-500' : 'bg-emerald-400'}`}></span><span className="text-sm uppercase tracking-widest text-slate-400">{timerMode} Mode</span></div>
                     {isEditingTime ? (
                        <input autoFocus type="number" value={editTimeVal} onChange={(e) => /^\d{0,3}$/.test(e.target.value) && setEditTimeVal(e.target.value)} onBlur={saveTimeEdit} onKeyDown={e => e.key === 'Enter' && saveTimeEdit()} className="text-7xl font-bold bg-transparent text-white outline-none w-full max-w-[300px] border-b-2 border-violet-500 font-mono" />
                     ) : (
@@ -291,9 +291,9 @@ function App() {
                          <div className="w-full bg-black/20 h-1.5 rounded-full mb-6"><div className="h-full bg-gradient-to-r from-violet-500 to-fuchsia-500 transition-all" style={{width: `${g.progress}%`}}></div></div>
                          <div className="space-y-3">
                             {loadingGoalId === g.id && <div className="text-center text-xs text-violet-300 animate-pulse">Generating plan...</div>}
-                            {g.tasks.map((t: any) => (
+                            {g.tasks.map(t => (
                                <div key={t.id} className="flex justify-between group/task cursor-pointer" onClick={()=>toggleTask(g.id, t.id)}>
-                                  <div className="flex items-center"><div className={`w-4 h-4 rounded border mr-3 flex items-center justify-center ${t.status === TaskStatus.DONE ? 'bg-emerald-500 border-emerald-500' : 'border-slate-600'}`}>{t.status === TaskStatus.DONE && <IconCheck className="w-3 h-3 text-black"/>}</div><span className={`text-sm ${t.status === TaskStatus.DONE ? 'text-slate-500 line-through' : 'text-slate-200'}`}>{t.title}</span></div>
+                                  <div className="flex items-center"><div className={`w-4 h-4 rounded border mr-3 flex items-center justify-center ${t.status === 'DONE' ? 'bg-emerald-500 border-emerald-500' : 'border-slate-600'}`}>{t.status === 'DONE' && <IconCheck className="w-3 h-3 text-black"/>}</div><span className={`text-sm ${t.status === 'DONE' ? 'text-slate-500 line-through' : 'text-slate-200'}`}>{t.title}</span></div>
                                   <button onClick={(e)=>{e.stopPropagation(); deleteTask(g.id, t.id)}} className="opacity-0 group-hover/task:opacity-100 text-slate-600 hover:text-red-400"><IconTrash className="w-3 h-3"/></button>
                                </div>
                             ))}
@@ -306,7 +306,7 @@ function App() {
 
           {activeTab === 'vision' && (
              <div className="max-w-7xl mx-auto animate-fade-in">
-                <header className="flex justify-between items-center mb-10"><div><h2 className="text-3xl font-bold">Vision Board</h2><p className="text-slate-400">Manifest your aesthetic.</p></div><div className="flex gap-2 glass-panel p-2 rounded-xl"><select className="bg-transparent text-sm text-slate-300 outline-none" value={newVisionType} onChange={(e)=>setNewVisionType(e.target.value as 'image'|'quote')}><option value="image" className="bg-dark">Image</option><option value="quote" className="bg-dark">Quote</option></select><input type="text" placeholder="URL or Text..." className="bg-transparent outline-none px-3 text-sm w-64" value={newVisionContent} onChange={e=>setNewVisionContent(e.target.value)} onKeyDown={e=>e.key==='Enter'&&addVision()} /><button onClick={addVision} className="bg-white/10 p-2 rounded-lg"><IconPlus className="w-4 h-4"/></button></div></header>
+                <header className="flex justify-between items-center mb-10"><div><h2 className="text-3xl font-bold">Vision Board</h2><p className="text-slate-400">Manifest your aesthetic.</p></div><div className="flex gap-2 glass-panel p-2 rounded-xl"><select className="bg-transparent text-sm text-slate-300 outline-none" value={newVisionType} onChange={(e)=>setNewVisionType(e.target.value)}><option value="image" className="bg-dark">Image</option><option value="quote" className="bg-dark">Quote</option></select><input type="text" placeholder="URL or Text..." className="bg-transparent outline-none px-3 text-sm w-64" value={newVisionContent} onChange={e=>setNewVisionContent(e.target.value)} onKeyDown={e=>e.key==='Enter'&&addVision()} /><button onClick={addVision} className="bg-white/10 p-2 rounded-lg"><IconPlus className="w-4 h-4"/></button></div></header>
                 <div className="columns-1 md:columns-3 lg:columns-4 gap-6 space-y-6">
                    {visionItems.map(i => (
                       <div key={i.id} className="break-inside-avoid glass-panel rounded-2xl overflow-hidden group relative hover:-translate-y-2 transition-all">
@@ -344,8 +344,5 @@ function App() {
   );
 }
 
-// -----------------------------------------------------------------------------
-// 6. MOUNT
-// -----------------------------------------------------------------------------
-const root = createRoot(document.getElementById('root')!);
+const root = createRoot(document.getElementById('root'));
 root.render(<App />);

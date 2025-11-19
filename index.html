@@ -4,14 +4,16 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>2027</title>
+    
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    
     <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
-    <!-- React & ReactDOM (Development versions for better error logging) -->
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <!-- React Globals (UMD) - Critical for No-Build Deployment -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     
     <!-- Babel Standalone -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -26,7 +28,7 @@
               glassHover: "rgba(30, 41, 59, 0.7)",
               primary: "#8b5cf6",
               secondary: "#ec4899",
-              accent: "#06b6d4",
+              accent: "#06b6d4", 
               dark: "#020617",
             },
             fontFamily: {
@@ -37,8 +39,6 @@
               'blob': 'blob 10s infinite',
               'fade-in': 'fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1)',
               'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-              'slide-up': 'slideUp 0.5s ease-out',
-              'shimmer': 'shimmer 2s linear infinite',
             },
             keyframes: {
               blob: {
@@ -50,14 +50,6 @@
               fadeIn: {
                 '0%': { opacity: '0', transform: 'translateY(10px) scale(0.98)' },
                 '100%': { opacity: '1', transform: 'translateY(0) scale(1)' },
-              },
-              slideUp: {
-                '0%': { transform: 'translateY(100%)' },
-                '100%': { transform: 'translateY(0)' },
-              },
-              shimmer: {
-                '0%': { backgroundPosition: '200% 0' },
-                '100%': { backgroundPosition: '-200% 0' }
               }
             }
           }
@@ -65,34 +57,13 @@
       }
     </script>
     <style>
-      body {
-        font-family: 'Outfit', sans-serif;
-        background-color: #020617;
-        color: #f8fafc;
-        overflow-x: hidden;
-      }
-      .glass-panel {
-        background: rgba(15, 23, 42, 0.4);
-        backdrop-filter: blur(20px);
-        -webkit-backdrop-filter: blur(20px);
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
-      }
-      .glass-panel-strong {
-        background: rgba(15, 23, 42, 0.8);
-        backdrop-filter: blur(24px);
-        -webkit-backdrop-filter: blur(24px);
-        border: 1px solid rgba(255, 255, 255, 0.12);
-      }
-      input[type="number"]::-webkit-inner-spin-button,
-      input[type="number"]::-webkit-outer-spin-button {
-        -webkit-appearance: none;
-        margin: 0;
-      }
+      body { font-family: 'Outfit', sans-serif; background-color: #020617; color: #f8fafc; overflow-x: hidden; }
+      .glass-panel { background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.08); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3); }
+      .glass-panel-strong { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); border: 1px solid rgba(255, 255, 255, 0.12); }
+      input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
       ::-webkit-scrollbar { width: 6px; }
       ::-webkit-scrollbar-track { background: transparent; }
       ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 10px; }
-      ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.2); }
       .animate-blob { animation: blob 12s infinite; }
     </style>
   <script type="importmap">
@@ -100,8 +71,8 @@
   "imports": {
     "react": "https://aistudiocdn.com/react@^19.2.0",
     "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
-    "react/": "https://aistudiocdn.com/react@^19.2.0/",
-    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.30.0"
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.30.0",
+    "react/": "https://aistudiocdn.com/react@^19.2.0/"
   }
 }
 </script>
@@ -116,7 +87,7 @@
     
     <div id="root" class="h-full w-full"></div>
 
-    <!-- Load the single file app logic -->
+    <!-- Load Index Script with Babel -->
     <script type="text/babel" src="./index.tsx"></script>
   </body>
 </html>
