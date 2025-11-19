@@ -4,8 +4,18 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>2027</title>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- React & ReactDOM (Development versions for better error logging) -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    
+    <!-- Babel Standalone -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
     <script>
       tailwind.config = {
         darkMode: 'class',
@@ -16,7 +26,7 @@
               glassHover: "rgba(30, 41, 59, 0.7)",
               primary: "#8b5cf6",
               secondary: "#ec4899",
-              accent: "#06b6d4", // Cyan
+              accent: "#06b6d4",
               dark: "#020617",
             },
             fontFamily: {
@@ -61,7 +71,6 @@
         color: #f8fafc;
         overflow-x: hidden;
       }
-      
       .glass-panel {
         background: rgba(15, 23, 42, 0.4);
         backdrop-filter: blur(20px);
@@ -69,65 +78,45 @@
         border: 1px solid rgba(255, 255, 255, 0.08);
         box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
       }
-
       .glass-panel-strong {
         background: rgba(15, 23, 42, 0.8);
         backdrop-filter: blur(24px);
         -webkit-backdrop-filter: blur(24px);
         border: 1px solid rgba(255, 255, 255, 0.12);
       }
-      
-      /* Input reset */
       input[type="number"]::-webkit-inner-spin-button,
       input[type="number"]::-webkit-outer-spin-button {
         -webkit-appearance: none;
         margin: 0;
       }
-      
-      /* Custom Scrollbar */
-      ::-webkit-scrollbar {
-        width: 6px;
-      }
-      ::-webkit-scrollbar-track {
-        background: transparent;
-      }
-      ::-webkit-scrollbar-thumb {
-        background: rgba(255, 255, 255, 0.1);
-        border-radius: 10px;
-      }
-      ::-webkit-scrollbar-thumb:hover {
-        background: rgba(255, 255, 255, 0.2);
-      }
-
-      .animate-blob {
-        animation: blob 12s infinite;
-      }
-      .animation-delay-2000 {
-        animation-delay: 2s;
-      }
-      .animation-delay-4000 {
-        animation-delay: 4s;
-      }
+      ::-webkit-scrollbar { width: 6px; }
+      ::-webkit-scrollbar-track { background: transparent; }
+      ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 10px; }
+      ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.2); }
+      .animate-blob { animation: blob 12s infinite; }
     </style>
   <script type="importmap">
 {
   "imports": {
     "react": "https://aistudiocdn.com/react@^19.2.0",
     "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
-    "react/": "https://aistudiocdn.com/react@^19.2.0/"
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.30.0"
   }
 }
 </script>
 </head>
   <body class="antialiased h-screen w-screen overflow-hidden relative text-slate-200 selection:bg-violet-500/30">
-    <!-- Improved Aesthetic Blobs -->
     <div class="fixed top-0 left-0 w-full h-full overflow-hidden -z-10 pointer-events-none">
         <div class="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] bg-violet-600/30 rounded-full mix-blend-screen filter blur-[100px] animate-blob"></div>
         <div class="absolute top-[-10%] right-[-10%] w-[50vw] h-[50vw] bg-fuchsia-600/30 rounded-full mix-blend-screen filter blur-[100px] animate-blob animation-delay-2000"></div>
         <div class="absolute bottom-[-20%] left-[20%] w-[60vw] h-[60vw] bg-cyan-600/20 rounded-full mix-blend-screen filter blur-[100px] animate-blob animation-delay-4000"></div>
         <div class="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 brightness-100 contrast-150 mix-blend-overlay"></div>
     </div>
+    
     <div id="root" class="h-full w-full"></div>
-    <script type="module" src="./index.tsx"></script>
+
+    <!-- Load the single file app logic -->
+    <script type="text/babel" src="./index.tsx"></script>
   </body>
 </html>

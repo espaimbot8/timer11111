@@ -1,47 +1,52 @@
-// Local replacement for AI services to make the app deployable without API keys
-// This ensures the app runs in isolation on GitHub Pages without needing a backend.
+
+import { GoogleGenAI, Type } from "@google/genai";
+
+const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 export const generateSubtasks = async (goal: string): Promise<string[]> => {
-  // Simulate network delay for better UX
-  await new Promise(resolve => setTimeout(resolve, 600));
-
-  const genericTasks = [
-    "Research key concepts",
-    "Draft initial outline", 
-    "Gather necessary resources",
-    "Review lecture notes",
-    "Practice problem sets",
-    "Summarize main points",
-    "Create flashcards",
-    "Final review & polish"
-  ];
-
-  // Return a random subset of 3-5 tasks
-  const shuffled = genericTasks.sort(() => 0.5 - Math.random());
-  return shuffled.slice(0, Math.floor(Math.random() * 3) + 3);
+  try {
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: `Break down the goal "${goal}" into 3-6 actionable subtasks. Return only the subtasks.`,
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.ARRAY,
+          items: { type: Type.STRING }
+        }
+      }
+    });
+    if (response.text) {
+       return JSON.parse(response.text);
+    }
+    return [];
+  } catch (e) {
+    console.error(e);
+    // Fallback in case of error/quota limits
+    return ["Research concepts", "Draft outline", "Gather resources", "Review material"];
+  }
 };
 
-export const generateMotivation = async (context: string): Promise<string> => {
-  const quotes = [
-    "focus on the process.",
-    "consistency is key.",
-    "dream big, work hard.",
-    "your potential is endless.",
-    "make it happen today.",
-    "2027 is waiting for you.",
-    "stay hungry, stay foolish.",
-    "discipline over motivation.",
-    "create your own future.",
-    "small steps every day."
-  ];
-  return quotes[Math.floor(Math.random() * quotes.length)];
+export const generateMotivation = async (context?: string): Promise<string> => {
+  try {
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: `Give me a short, punchy motivation quote for someone studying/working hard${context ? ` on ${context}` : ''}. Max 10 words. Lowercase aesthetic style.`,
+    });
+    return response.text || "focus on the process.";
+  } catch (e) {
+    return "focus on the process.";
+  }
 };
 
 export const getExamStudyTips = async (subject: string): Promise<string> => {
-  await new Promise(resolve => setTimeout(resolve, 600));
-  
-  return `• Review the ${subject} syllabus thoroughly
-• Practice past exam papers under timed conditions
-• Summarize your notes into one-page cheat sheets
-• Explain complex ${subject} concepts to a friend`;
-}
+   try {
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: `Provide 4 brief, bulleted study tips for a ${subject} exam.`,
+    });
+    return response.text || `• Review ${subject} syllabus\n• Practice past papers`;
+  } catch (e) {
+    return `• Review ${subject} syllabus\n• Practice past papers`;
+  }
+};
